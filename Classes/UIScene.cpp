@@ -1,5 +1,6 @@
 #include "UIScene.h"
 #include "PlayerLayer.h"
+#include "LevelSelectScene.h"
 
 USING_NS_CC;
 Scene* UIScene::createScene()
@@ -53,7 +54,7 @@ bool UIScene::init()
 
 void UIScene::menuStartCallback( Ref* pSender )
 {
-	Director::getInstance()->replaceScene(TransitionFade::create(0.2f, PlayerLayer::createScene()));
+	Director::getInstance()->replaceScene(TransitionFade::create(0.2f, LevelSelectScene::create()));
 }
 
 RepeatForever* UIScene::PathFun( float controlX, float controlY, float w )

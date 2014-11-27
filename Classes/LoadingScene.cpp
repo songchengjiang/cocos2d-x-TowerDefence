@@ -47,7 +47,8 @@ void LoadingScene::update( float deltaTime )
 
 	if (ResourceLoader::getInstance()->getLoadedResourceCount() == ResourceLoader::getInstance()->getTotalResourceCount())
 	{
-		auto ts = TransitionFade::create(0.2f, PlayerLayer::createScene());
+		auto ts = TransitionFade::create(0.2f, UIScene::createScene());
 		Director::getInstance()->replaceScene(ts);
+		unscheduleUpdate();
 	}
 }

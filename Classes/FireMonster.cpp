@@ -1,5 +1,9 @@
 #include "FireMonster.h"
 #include "AnimationLoader.h"
+#include "GameManager.h"
+#include "SimpleAudioEngine.h"
+using namespace CocosDenshion; 
+
 USING_NS_CC;
 
 bool FireMonster::init()
@@ -18,6 +22,10 @@ bool FireMonster::init()
 	AnimationCache::getInstance()->addAnimation(animExplode, "FireMonterDead");
 
 	setMoveVelocity(30.0f);
+	setMaxHp(10);
+	setCurrHp(10);
+
+	createAndSetHpBar();
 	return true;
 }
 
@@ -27,13 +35,14 @@ void FireMonster::born()
 	_currentPosition = 0;
 	this->setPosition(_movePath.at(_currentPosition));
 	playMoveAnimations();
+	GameManager::getInstance()->monsterList.push_back(this);
 }
 
 void FireMonster::move()
 {
 	++_currentPosition;
 	if (_currentPosition >= _movePath.size()){
-		stop();
+		MonsterPassCallback(this);
 		return;
 	}
 	auto currentPos = this->getPosition();
@@ -51,7 +60,12 @@ void FireMonster::stop()
 void FireMonster::dead()
 {
 	stop();
+	removeHpBar();
+	_entity->setAnchorPoint(Point(0.5f, 0.25f));
 	_entity->runAction(Sequence::create(Animate::create(AnimationCache::getInstance()->getAnimation("FireMonterDead")), CallFunc::create(CC_CALLBACK_0(FireMonster::removeFromParent, this)), nullptr));
+	auto iter = std::find(GameManager::getInstance()->monsterList.begin(), GameManager::getInstance()->monsterList.end(), this);
+	GameManager::getInstance()->monsterList.erase(iter);
+	SimpleAudioEngine::getInstance()->playEffect(FileUtils::getInstance()->fullPathForFilename("sound/enemy0_down.mp3").c_str(), false);
 }
 
 void FireMonster::playMoveAnimations()

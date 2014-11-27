@@ -6,16 +6,15 @@ bool MagicTower::init()
 {
 	if (!BaseTower::init()) return false;
 
-	setScope(150);
-	setLethality(5);
-	setShootIntervalTime(1);
+	setScope(100);
+	setShootIntervalTime(4);
 
 	auto multiDirTower = Sprite::createWithSpriteFrameName("multiDirTower.png");
 	this->addChild(multiDirTower);
 	this->setContentSize(multiDirTower->getContentSize());
 
 	scheduleUpdate();
-	schedule(schedule_selector(MagicTower::shootBullet), this->getShootIntervalTime());
+	//schedule(schedule_selector(MagicTower::shootBullet), this->getShootIntervalTime());
 	return true;
 }
 
@@ -29,8 +28,8 @@ void MagicTower::shootBullet(float dt)
 	for (unsigned int i = 0; i < 6; ++i)
 	{
 		auto bullet = MagicBullet::create();
-		bullet->setOrigin(Vec2(this->getPosition().x, this->getPosition().y + this->getContentSize().height / 4.0f));
-		bullet->setDirection(Vec2(1.0f, tanf(CC_DEGREES_TO_RADIANS(60.0f * i))));
+		bullet->setOrigin(Vec2(0.0f, this->getContentSize().height / 4.0f));
+		bullet->setDirection(Vec2(cosf(CC_DEGREES_TO_RADIANS(60.0f * i)), sinf(CC_DEGREES_TO_RADIANS(60.0f * i))));
 		bullet->fillBulletTo(this);
 		bullet->shoot();
 	}
@@ -38,17 +37,9 @@ void MagicTower::shootBullet(float dt)
 
 void MagicTower::update( float deltaTime )
 {
-	_nearestMonster = nullptr;
-	for (auto iter : GameManager::getInstance()->monsterList)
-	{
-		auto target = iter;
-		if ((target->getPosition() - this->getPosition()).lengthSquared() < this->getScope() * this->getScope()){
-			_nearestMonster = target;
-			break;
-		}
-	}
+	if (!searchTarget()) return;
 
-	//scheduleOnce(schedule_selector(MagicTower::shootBullet), this->getShootIntervalTime());
+	scheduleOnce(schedule_selector(MagicTower::shootBullet), this->getShootIntervalTime());
 }
 
 bool MagicBullet::init()
@@ -60,7 +51,8 @@ bool MagicBullet::init()
 	this->setContentSize(arrow->getContentSize());
 	this->addChild(arrow);
 
-	setVelocity(10.0f);
+	setVelocity(100.0f);
+	setLethality(5);
 	setShootRange(size.width);
 	setOrigin(Vec2::ZERO);
 	setDirection(Vec2::ZERO);

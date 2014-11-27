@@ -1,5 +1,4 @@
 #include "ResourceLoader.h"
-
 USING_NS_CC;
 
 ResourceLoader::ResourceLoader(void)

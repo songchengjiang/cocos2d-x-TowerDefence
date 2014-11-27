@@ -14,10 +14,17 @@ public:
 	virtual void dead() = 0;
 
 	CC_SYNTHESIZE(float, _moveVelocity, MoveVelocity);
+	CC_SYNTHESIZE(int, _maxHp, MaxHp);
+	CC_SYNTHESIZE(int, _currHp, CurrHp);
+	CC_SYNTHESIZE_READONLY(cocos2d::ProgressTimer*, _hpBar, HpBar);
+	void updateHpBar();
+
+	std::function<void(BaseMonster *)> MonsterPassCallback;
 
 protected:
 	BaseMonster();
-
+	void createAndSetHpBar();
+	void removeHpBar();
 protected:
 	std::vector<cocos2d::Vec2> _movePath;
 	unsigned int _currentPosition;

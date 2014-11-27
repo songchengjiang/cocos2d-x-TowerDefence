@@ -1,5 +1,9 @@
 #include "IceMonster.h"
 #include "AnimationLoader.h"
+#include "GameManager.h"
+#include "SimpleAudioEngine.h"
+using namespace CocosDenshion; 
+
 USING_NS_CC;
 
 bool IceMonster::init()
@@ -18,6 +22,10 @@ bool IceMonster::init()
 	AnimationCache::getInstance()->addAnimation(animExplode, "IceMonterDead");
 
 	setMoveVelocity(40.0f);
+	setMaxHp(5);
+	setCurrHp(5);
+
+	createAndSetHpBar();
 	return true;
 }
 
@@ -27,13 +35,14 @@ void IceMonster::born()
 	_currentPosition = 0;
 	this->setPosition(_movePath.at(_currentPosition));
 	playMoveAnimations();
+	GameManager::getInstance()->monsterList.push_back(this);
 }
 
 void IceMonster::move()
 {
 	++_currentPosition;
 	if (_currentPosition >= _movePath.size()){
-		stop();
+		MonsterPassCallback(this);
 		return;
 	}
 	auto currentPos = this->getPosition();
@@ -51,7 +60,12 @@ void IceMonster::stop()
 void IceMonster::dead()
 {
 	stop();
+	removeHpBar();
+	_entity->setAnchorPoint(Point(0.5f, 0.25f));
 	_entity->runAction(Sequence::create(Animate::create(AnimationCache::getInstance()->getAnimation("IceMonterDead")), CallFunc::create(CC_CALLBACK_0(IceMonster::removeFromParent, this)), nullptr));
+	auto iter = std::find(GameManager::getInstance()->monsterList.begin(), GameManager::getInstance()->monsterList.end(), this);
+	GameManager::getInstance()->monsterList.erase(iter);
+	SimpleAudioEngine::getInstance()->playEffect(FileUtils::getInstance()->fullPathForFilename("sound/enemy0_down.mp3").c_str(), false);
 }
 
 void IceMonster::playMoveAnimations()

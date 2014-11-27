@@ -8,7 +8,6 @@ class BaseTower :
 	public cocos2d::Layer
 {
 	CC_SYNTHESIZE(int, _scope, Scope);
-	CC_SYNTHESIZE(int, _lethality, Lethality);
 	CC_SYNTHESIZE(float, _shootIntervalTime, ShootIntervalTime);
 
 	virtual void shootBullet(float dt) = 0;
@@ -16,6 +15,7 @@ class BaseTower :
 protected:
 
 	BaseTower();
+	bool searchTarget();
 
 protected:
 	BaseMonster *_nearestMonster;
@@ -26,6 +26,7 @@ class BaseBullet :
 {
 public:
 
+	CC_SYNTHESIZE(int, _lethality, Lethality);
 	void setOrigin(const cocos2d::Vec2 &origin);
 	const cocos2d::Vec2& getOrigin() const;
 	void setDirection(const cocos2d::Vec2 &direction);
@@ -37,14 +38,13 @@ public:
 	bool isOutOfBound();
 
 	void fillBulletTo(cocos2d::Node *node);
-	void shoot();
+	void shoot(bool rotByDir = false);
 	bool hitTarget(cocos2d::Node *target);
+	void removeBullet();
 
 protected:
 
 	BaseBullet();
-
-	void removeBullet();
 
 protected:
 

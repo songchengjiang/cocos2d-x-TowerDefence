@@ -1,11 +1,31 @@
 #include "BaseTower.h"
 #include "GameManager.h"
+#include "SimpleAudioEngine.h"
+using namespace CocosDenshion; 
+
 USING_NS_CC;
 
 BaseTower::BaseTower()
 	: _nearestMonster(nullptr)
 {
 
+}
+
+bool BaseTower::searchTarget()
+{
+	_nearestMonster = nullptr;
+	float scope = this->getScope() * this->getScope();
+	for (auto iter : GameManager::getInstance()->monsterList)
+	{
+		auto target = iter;
+		float lenSqr = (target->getPosition() - this->getPosition()).lengthSquared();
+		if (lenSqr < scope){
+			_nearestMonster = target;
+			scope = lenSqr;
+		}
+	}
+
+	return _nearestMonster == nullptr? false: true;
 }
 
 void BaseBullet::setOrigin( const cocos2d::Vec2 &origin )
@@ -62,20 +82,26 @@ bool BaseBullet::isOutOfBound()
 	return false;
 }
 
-void BaseBullet::shoot()
+void BaseBullet::shoot(bool rotByDir)
 {
 	if (this->getParent()){
 		this->setPosition(_origin);
-		this->setRotation(atan2f(_direction.y, _direction.x));
+		if (rotByDir)
+			this->setRotation(CC_RADIANS_TO_DEGREES(-atan2f(_direction.y, _direction.x)));
 		auto endPos = _origin + _direction * _shootRange;
 		this->runAction(Sequence::create(MoveTo::create(_shootRange / _velocity, endPos), CallFunc::create(CC_CALLBACK_0(BaseBullet::removeBullet, this)), nullptr));
-		GameManager::getInstance()->bulletList.pushBack(this);
+		GameManager::getInstance()->bulletList.push_back(this);
+
+		SimpleAudioEngine::getInstance()->playEffect(FileUtils::getInstance()->fullPathForFilename("sound/button.wav").c_str(), false);
 	}
 }
 
 void BaseBullet::removeBullet()
 {
-	GameManager::getInstance()->bulletList.eraseObject(this);
+	this->stopAllActions();
+	auto iter = std::find(GameManager::getInstance()->bulletList.begin(), GameManager::getInstance()->bulletList.end(), this);
+	if (iter != GameManager::getInstance()->bulletList.end())
+		GameManager::getInstance()->bulletList.erase(iter);
 	this->removeFromParent();
 }
 
@@ -86,10 +112,11 @@ void BaseBullet::fillBulletTo(cocos2d::Node *node)
 
 bool BaseBullet::hitTarget( cocos2d::Node *target )
 {
-	Mat4 mat = this->getNodeToWorldTransform();
-	auto inWorldPos = mat * Vec4(this->getPosition().x, this->getPosition().y, 0.0f, 1.0f);
-	Rect bRect(inWorldPos.x, inWorldPos.y, this->getContentSize().width, this->getContentSize().height);
-	Rect tRect(target->getPosition().x, target->getPosition().y, target->getContentSize().width, target->getContentSize().height);
+	Vec2 bInWorldPos = this->convertToWorldSpace(Vec2(-this->getContentSize().width / 2.0f, -this->getContentSize().height / 2.0f));
+	Vec2 tInWorldPos = target->convertToWorldSpace(Vec2(-target->getContentSize().width / 2.0f, -target->getContentSize().height / 2.0f));
+
+	Rect bRect(bInWorldPos.x, bInWorldPos.y, this->getContentSize().width, this->getContentSize().height);
+	Rect tRect(tInWorldPos.x, tInWorldPos.y, target->getContentSize().width, target->getContentSize().height);
 	if (bRect.intersectsRect(tRect)) 
 		return true;
 	return false;

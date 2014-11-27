@@ -6,8 +6,7 @@ bool ArrowTower::init()
 {
 	if (!BaseTower::init()) return false;
 
-	setScope(90);
-	setLethality(2);
+	setScope(70);
 	setShootIntervalTime(2);
 
 	auto baseplate = Sprite::createWithSpriteFrameName("baseplate.png");
@@ -19,7 +18,7 @@ bool ArrowTower::init()
 	this->setContentSize(Size(baseplate->getContentSize().width > _rotateArrow->getContentSize().width? baseplate->getContentSize().width: _rotateArrow->getContentSize().width
 		                                , baseplate->getContentSize().height > _rotateArrow->getContentSize().height? baseplate->getContentSize().height: _rotateArrow->getContentSize().height));
 
-	schedule(schedule_selector(ArrowTower::shootBullet), this->getShootIntervalTime());
+	//schedule(schedule_selector(ArrowTower::shootBullet), this->getShootIntervalTime());
 	scheduleUpdate();
 	return true;
 }
@@ -35,28 +34,18 @@ void ArrowTower::shootBullet(float dt)
 	bullet->setOrigin(_rotateArrow->getPosition());
 	bullet->setDirection(deltaPos);
 	bullet->fillBulletTo(this);
-	bullet->shoot();
+	bullet->shoot(true);
 }
 
 void ArrowTower::update( float deltaTime )
 {
-	_nearestMonster = nullptr;
-	for (auto iter : GameManager::getInstance()->monsterList)
-	{
-		auto target = iter;
-		if ((target->getPosition() - this->getPosition()).lengthSquared() < this->getScope() * this->getScope()){
-			_nearestMonster = target;
-			break;
-		}
-	}
-
-	if (!_nearestMonster) return;
+	if (!searchTarget()) return;
 
 	auto targetPos = _nearestMonster->getPosition();
 	auto deltaPos = targetPos - this->getPosition();
 	auto rotAngle = atan2f(deltaPos.y, deltaPos.x);
-	_rotateArrow->setRotation(CC_RADIANS_TO_DEGREES(rotAngle));
-	//scheduleOnce(schedule_selector(ArrowTower::shootBullet), 0.5f);
+	_rotateArrow->setRotation(CC_RADIANS_TO_DEGREES(-rotAngle));
+	scheduleOnce(schedule_selector(ArrowTower::shootBullet), this->getShootIntervalTime());
 }
 
 bool ArrowBullet::init()
@@ -68,7 +57,8 @@ bool ArrowBullet::init()
 	this->setContentSize(arrow->getContentSize());
 	this->addChild(arrow);
 
-	setVelocity(10.0f);
+	setVelocity(100.0f);
+	setLethality(2);
 	setShootRange(size.width);
 	setOrigin(Vec2::ZERO);
 	setDirection(Vec2::ZERO);

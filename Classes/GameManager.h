@@ -11,8 +11,11 @@ public:
 
 	static GameManager* getInstance();
 
-	cocos2d::Vector<BaseBullet *> bulletList;
-	cocos2d::Vector<BaseMonster *> monsterList;
+	std::vector<BaseBullet *> bulletList;
+	std::vector<BaseMonster *> monsterList;
+	std::vector<cocos2d::Vec2> walkPathList;
+
+	void clear();
 
 private:
 
